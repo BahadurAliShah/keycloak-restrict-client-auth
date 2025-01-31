@@ -1,6 +1,7 @@
 package de.sventorben.keycloak.authorization.client.access.policy;
 
 import de.sventorben.keycloak.authorization.client.access.AccessProvider;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.jboss.logging.Logger;
 import org.keycloak.authorization.AuthorizationProvider;
 import org.keycloak.authorization.Decision;
@@ -11,7 +12,6 @@ import org.keycloak.authorization.identity.Identity;
 import org.keycloak.authorization.model.Resource;
 import org.keycloak.authorization.model.ResourceServer;
 import org.keycloak.authorization.permission.ResourcePermission;
-import org.keycloak.authorization.store.ResourceServerStore;
 import org.keycloak.authorization.store.StoreFactory;
 import org.keycloak.models.ClientModel;
 import org.keycloak.models.KeycloakSession;
@@ -39,7 +39,7 @@ public final class PolicyBasedAccessProvider implements AccessProvider {
     }
 
     @Override
-    public boolean isPermitted(ClientModel client, UserModel user) {
+    public boolean isPermitted(ClientModel client, UserModel user, @Nullable String token) {
         AuthorizationProvider authorization = keycloakSession.getProvider(AuthorizationProvider.class);
         Resource resource = getResource(client, authorization);
         ResourceServer resourceServer = getResourceServer(client, authorization);
