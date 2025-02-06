@@ -13,7 +13,6 @@ import org.keycloak.models.ClientModel;
 import org.keycloak.models.KeycloakSession;
 import org.keycloak.models.RealmModel;
 import org.keycloak.models.UserModel;
-import org.keycloak.representations.IDToken;
 import org.keycloak.representations.idm.OAuth2ErrorRepresentation;
 import org.keycloak.services.messages.Messages;
 import org.keycloak.sessions.AuthenticationSessionModel;
@@ -39,10 +38,7 @@ final class RestrictClientAuthAuthenticator implements Authenticator {
         }
 
         final UserModel user = context.getUser();
-        final IDToken token = new IDToken();
-        token.setEmail(user.getEmail());
-        final String encodedToken = context.getSession().tokens().encodeAndEncrypt(token);
-        if (access.isPermitted(client, user, encodedToken)) {
+        if (access.isPermitted(client, user)) {
             context.success();
         } else {
             context.getEvent()

@@ -1,7 +1,8 @@
 package de.sventorben.keycloak.authorization.client.access.role;
 
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import de.sventorben.keycloak.authorization.client.access.AccessProvider;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.jboss.logging.Logger;
 import org.keycloak.models.ClientModel;
 import org.keycloak.models.UserModel;
@@ -28,18 +29,20 @@ public final class ClientRoleBasedAccessProvider implements AccessProvider {
     }
 
     @Override
-    public boolean isPermitted(ClientModel client, UserModel user, @Nullable String token) {
+    public boolean isPermitted(ClientModel client, UserModel user) {
 //        final RoleModel role = client.getRole(clientRoleName);
 //        if (role == null) return false;
         if (user == null) return false;
 //        boolean permitted = user.hasRole(role);
         boolean permitted = false;
         try {
-            String apiUrl = String.format("http://host.docker.internal:3009/check-permission/%s/%s/%s", client.getRealm().getName(), client.getClientId(), user.getUsername());
+            String baseUrl = System.getenv("ADMIN_SERVER_BASE_URL");
+            String apiKey = System.getenv("ADMIN_SERVER_API_KEY");
+            String apiUrl = String.format("%s/app/permission/%s/%s/%s", baseUrl, client.getRealm().getId(), client.getClientId(), user.getUsername());
             URL url = new URL(apiUrl);
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod("GET");
-            conn.setRequestProperty("Authorization", "Bearer "+token);
+            conn.setRequestProperty("apiKey", apiKey);
 
             // Get the response from the API
             BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
@@ -52,7 +55,8 @@ public final class ClientRoleBasedAccessProvider implements AccessProvider {
             conn.disconnect();
 
             // Parse the response
-            permitted = Boolean.parseBoolean(content.toString());
+            JsonObject jsonResponse = JsonParser.parseString(content.toString()).getAsJsonObject();
+            permitted = jsonResponse.get("allowed").getAsBoolean();
         } catch (Exception e) {
             LOG.error("Error while calling checkPermission API", e);
         }
