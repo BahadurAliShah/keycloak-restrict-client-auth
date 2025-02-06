@@ -42,7 +42,7 @@ public final class ClientRoleBasedAccessProvider implements AccessProvider {
             URL url = new URL(apiUrl);
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod("GET");
-            conn.setRequestProperty("apiKey", apiKey);
+            conn.setRequestProperty("x-api-key", apiKey);
 
             // Get the response from the API
             BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
