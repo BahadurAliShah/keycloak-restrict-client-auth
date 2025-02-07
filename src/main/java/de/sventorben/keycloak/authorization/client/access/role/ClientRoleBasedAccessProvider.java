@@ -1,14 +1,10 @@
 package de.sventorben.keycloak.authorization.client.access.role;
 
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import de.sventorben.keycloak.authorization.client.access.AccessProvider;
 import org.jboss.logging.Logger;
 import org.keycloak.models.ClientModel;
 import org.keycloak.models.UserModel;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
@@ -45,18 +41,13 @@ public final class ClientRoleBasedAccessProvider implements AccessProvider {
             conn.setRequestProperty("x-api-key", apiKey);
 
             // Get the response from the API
-            BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-            String inputLine;
-            StringBuilder content = new StringBuilder();
-            while ((inputLine = in.readLine()) != null) {
-                content.append(inputLine);
+            int responseCode = conn.getResponseCode();
+            if (responseCode == 200) {
+                permitted = true;
+            } else {
+                LOG.warnf("Received non-200 response code: %d", responseCode);
             }
-            in.close();
             conn.disconnect();
-
-            // Parse the response
-            JsonObject jsonResponse = JsonParser.parseString(content.toString()).getAsJsonObject();
-            permitted = jsonResponse.get("allowed").getAsBoolean();
         } catch (Exception e) {
             LOG.error("Error while calling checkPermission API", e);
         }
@@ -68,7 +59,7 @@ public final class ClientRoleBasedAccessProvider implements AccessProvider {
                 user.getUsername(), client.getClientId(), client.getRealm().getName());
         } else {
             LOG.warnf("Access for user '%s' to client '%s' in realm '%s' is denied. User does not have client role '%s' on client with id '%s'.",
-                    user.getUsername(), client.getClientId(), client.getRealm().getName(), clientRoleName, client.getId());
+                user.getUsername(), client.getClientId(), client.getRealm().getName(), clientRoleName, client.getId());
         }
         return permitted;
     }
